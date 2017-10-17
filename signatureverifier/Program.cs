@@ -1,45 +1,87 @@
 ﻿using System;
+using System.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
 
 namespace signatureverifier
 {
-    static class Program
+    internal static class Program
     {
-        static void Main()
+        private static void Main()
         {
             // ComAround
-            const string e = "AQAB";
-            const string n = "3-f4dQItaX04RceIkb62Xy8Xti17FyeYOdUEZYuoMBOOjPN1mWwaZhKQzsjN-YpkNJ4FckhkwOVZg0jHXwoPt4pz98Z95MoXLRp4VtnF0mL5fjrvqqN4x_SGRID84aEjK8yOSxhlweHEAq7WvgxVVGVrrviAXILGWe5HxwtXherJmwbdC-NxIrvDftlVGRU0Mg0fsQ_CcMLgJk97zU-hlZyRrUo1VvNNCM2pUMUCctgilh3cGEagg7mjge3K6BWAIkR8dm1j9smk_WFPgeg9R_yo3ufAlyHfgOGrwEnjJ27LsDvSqWVxhyHKxpS9xg8mSE6L1sUgsrnU21IudNwfhw";
-            const string token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IjZncnh0VXdnZ3FEUFFKbm1tRDRtNURpU2N6dyIsImtpZCI6IjZncnh0VXdnZ3FEUFFKbm1tRDRtNURpU2N6dyJ9.eyJpc3MiOiJodHRwczovL3Rlc3Rsb2dpbi5jb21hcm91bmQuY29tLyIsImF1ZCI6Imh0dHBzOi8vdGVzdGxvZ2luLmNvbWFyb3VuZC5jb20vcmVzb3VyY2VzIiwiZXhwIjoxNTA4MDI3NTk1LCJuYmYiOjE1MDgwMjM5OTUsImNsaWVudF9pZCI6Inplcm9mcm9udGVuZCIsInNjb3BlIjoiemVyb2FwaSIsInN1YiI6IjYxOTAiLCJhdXRoX3RpbWUiOjE1MDgwMjM5OTEsImlkcCI6Imlkc3J2IiwibmFtZSI6Ik1hcnRpbiBXw6VnZXIiLCJhbGxvd2VkaXAiOiIqIiwiY3VzdG9tZXJpZCI6IjEzOSIsImVtYWlsIjoibWFydGluLndAY29tYXJvdW5kLnNlIiwidXNlcnVnYW0iOiIxNjQxNyIsImxpY2Vuc2UiOiJCYXNpYyIsInBvcnRhbGlkcyI6WyIxOTciLCIyMDEiLCI5NzgiXSwicm9sZSI6Ik1hbmFnZXIiLCJ1c2VyZ3JvdXBpZHMiOlsiMTQyNSIsIjE0NDUiLCIzOTA3Il0sImFtciI6WyJQYXNzd29yZCJdfQ.NLVZqNnw6lcy6MPiSawWxR-jMoGMXsd4MlY3rzwr1Bh5O_YBGy_Z6KowSRdlCyP4CPlNOQI8o-REXi6BsFouT1gWCodwSakdVSF-arBTL2mXNf8N-TWIKV1TfwtAzamotrnkMVqzddSy8jsbCL2hOMa9ytPx6sFPvBm623wnh4N8WlAwqsSxlzA4EhPWWygDl6t4bpIWdz8_Sv16G_YTlw4UdQsuIc2E6SB7nV0a5rFzdntmSy7hRArj2jaDZp2i19dr0k_Eq3l_HUOxpIkBw4rbhpJFlUOq7fiXpoYkZUxK2hOK3iTOLDsGJfG7U0FIadU_sQwBH1axfrtgVcve8w";
+            //const string e = "AQAB";
+            //const string n = "3-f4dQItaX04RceIkb62Xy8Xti17FyeYOdUEZYuoMBOOjPN1mWwaZhKQzsjN-YpkNJ4FckhkwOVZg0jHXwoPt4pz98Z95MoXLRp4VtnF0mL5fjrvqqN4x_SGRID84aEjK8yOSxhlweHEAq7WvgxVVGVrrviAXILGWe5HxwtXherJmwbdC-NxIrvDftlVGRU0Mg0fsQ_CcMLgJk97zU-hlZyRrUo1VvNNCM2pUMUCctgilh3cGEagg7mjge3K6BWAIkR8dm1j9smk_WFPgeg9R_yo3ufAlyHfgOGrwEnjJ27LsDvSqWVxhyHKxpS9xg8mSE6L1sUgsrnU21IudNwfhw";
+            //const string token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IjZncnh0VXdnZ3FEUFFKbm1tRDRtNURpU2N6dyIsImtpZCI6IjZncnh0VXdnZ3FEUFFKbm1tRDRtNURpU2N6dyJ9.eyJpc3MiOiJodHRwczovL3Rlc3Rsb2dpbi5jb21hcm91bmQuY29tLyIsImF1ZCI6Imh0dHBzOi8vdGVzdGxvZ2luLmNvbWFyb3VuZC5jb20vcmVzb3VyY2VzIiwiZXhwIjoxNTA4MjQxODIxLCJuYmYiOjE1MDgyMzgyMjEsImNsaWVudF9pZCI6Inplcm9mcm9udGVuZCIsInNjb3BlIjoiemVyb2FwaSIsInN1YiI6IjYxOTAiLCJhdXRoX3RpbWUiOjE1MDgyMzgyMjAsImlkcCI6Imlkc3J2IiwibmFtZSI6Ik1hcnRpbiBXw6VnZXIiLCJhbGxvd2VkaXAiOiIqIiwiY3VzdG9tZXJpZCI6IjEzOSIsImVtYWlsIjoibWFydGluLndAY29tYXJvdW5kLnNlIiwidXNlcnVnYW0iOiIxNjQxNyIsImxpY2Vuc2UiOiJCYXNpYyIsInBvcnRhbGlkcyI6WyIxOTciLCIyMDEiLCI5NzgiXSwicm9sZSI6Ik1hbmFnZXIiLCJ1c2VyZ3JvdXBpZHMiOlsiMTQyNSIsIjE0NDUiLCIzOTA3Il0sImFtciI6WyJQYXNzd29yZCJdfQ.Eonf9Gwc-DcW6SEW6oXwb1taVrgQdN6JCdgbtQ_GN5IEkwE3QHaO6FBvV_qOP_cu82AK_r3o6ZEzGcQdXamQZY63bF4Bd4uV7fTOvx4jAWNlqg9UgM0ZoR4VPeIptSTxX_2SFlfRzHN2zAG3a3XrOGApWSrrXUzwjOgufidNUyCFH0nOZndf2pGFweIAUspoWQVPGW1qdpKzMUS9H0abfdFvSOrvpv2G2elkV3IbdSECKMZ8msvs4OSuq9EwhsnnLADNjAgs3OOVK4vRvQnahg1ifEKrN4-k-Sl-PwzEUVKRBrmRhBVVpI-YtgDVR_V8kRoJUK7ChIU5PsvxLwAPyg";
 
             // Vv
-            //const string e = "AQAB";
-            //const string n = "AJQkHGApl39Q-2InDQ-4sl8tnaKBM2oOf0voXaDGfbAG4rQDcFaJsFCr8aszQ459guBmjRFO2UvCZTrgs50eSdguMJTpDUZ8nbsiC0VCR9kaFPgsKj7a42zjKm4XEAU-Y3RJr0cqHDrbV1pJulQn4JDWzX6_RcA26aS6jzwHs-7-lJQPyYlxQv9gix35erFKOgZgzYLxNty2Gbjrj7rZ9ATfJjjwx8aZ-Cn3mVtJry1318-Azo49srnz0TmW6hlc5AmYZodD61hGjKUAe-l-a1hMMn7ziHWvb6cmotAiQsQ-WKCZZhO3kmLlqids-1d_9PMxkqmg4TZbTJYkTaSj8fM";
-            //const string token = "eyJ0eXAiOiJKV1QiLCJraWQiOiJDanhYcUhFYlpvWEdYNkRHTE4xZzRaY1hCWTQ9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJURVNUMTAiLCJhdWRpdFRyYWNraW5nSWQiOiIzZDJkNTVlZS1hNmEzLTRmNDgtYjM3MC0yZDkwNmM2MzA4NGQiLCJpc3MiOiJodHRwczovL3d3dy50ZXN0LnZlZ3Zlc2VuLm5vOjQ0My9vcGVuYW0vb2F1dGgyL2VtcGxveWVlcyIsInRva2VuTmFtZSI6ImFjY2Vzc190b2tlbiIsInRva2VuX3R5cGUiOiJCZWFyZXIiLCJhdXRoR3JhbnRJZCI6IjFkN2M0OWQ0LWM4OTItNDYxZS1iMGQ2LWIzZDNjMDk4ZDZiZSIsImF1ZCI6IkNvbUFyb3VuZCIsIm5iZiI6MTUwODAyMjM0Niwic2NvcGUiOlsic3Z2cHJvZmlsZSIsIm9wZW5pZCJdLCJhdXRoX3RpbWUiOjE1MDgwMjIzNDYsInJlYWxtIjoiL0VtcGxveWVlcyIsImV4cCI6MTUwODA1MTE0NiwiaWF0IjoxNTA4MDIyMzQ2LCJleHBpcmVzX2luIjoyODgwMDAwMCwianRpIjoiNzE3Yzk0YTYtNDdmOS00MzlhLWEwNzQtMjI4MjYyMTBiMzc5In0.kY2T0pAWopjsOmajjscXeI8HgrrQ8-e6LZprn9_LgSPRfYq5crUMxJ70rLawEMnpIkv7KEvNO3yfJNYTbif3miztbY5ipEN9CHE-2UBZqTv_A5i2-lvq52UDo4D10BL45j3ULW4VpqI_hu_JWCRxJrE5lt4AoLRywWJvdIHuaQ49krzANb2pzvZT0mwVwB0XfiwmwHCZ8uHAhVaxx9JtdiDyhfpLBstqjUpp1tfpJRpzjoqCcvKeUM7FmtnUnG6QMTTerixqBSveKEjL2naKnF7h7m4p6WjsA5POYK3Dpra12SPQ-iflr_8MbcIyVxMtj_yhCdUWAglHOPoxb0RG7Q";
+            const string e = "AQAB";
+            const string n = "AJQkHGApl39Q-2InDQ-4sl8tnaKBM2oOf0voXaDGfbAG4rQDcFaJsFCr8aszQ459guBmjRFO2UvCZTrgs50eSdguMJTpDUZ8nbsiC0VCR9kaFPgsKj7a42zjKm4XEAU-Y3RJr0cqHDrbV1pJulQn4JDWzX6_RcA26aS6jzwHs-7-lJQPyYlxQv9gix35erFKOgZgzYLxNty2Gbjrj7rZ9ATfJjjwx8aZ-Cn3mVtJry1318-Azo49srnz0TmW6hlc5AmYZodD61hGjKUAe-l-a1hMMn7ziHWvb6cmotAiQsQ-WKCZZhO3kmLlqids-1d_9PMxkqmg4TZbTJYkTaSj8fM";
+            const string token = "eyJ0eXAiOiJKV1QiLCJraWQiOiJDanhYcUhFYlpvWEdYNkRHTE4xZzRaY1hCWTQ9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJURVNUMTAiLCJhdWRpdFRyYWNraW5nSWQiOiJkMjI4Mzc3Mi1hYmU5LTQyY2QtYjY4NC04MTlmZjQ2MTQzOTMiLCJpc3MiOiJodHRwczovL3d3dy50ZXN0LnZlZ3Zlc2VuLm5vOjQ0My9vcGVuYW0vb2F1dGgyL2VtcGxveWVlcyIsInRva2VuTmFtZSI6ImFjY2Vzc190b2tlbiIsInRva2VuX3R5cGUiOiJCZWFyZXIiLCJhdXRoR3JhbnRJZCI6IjE2YzQwZWVjLWVjZmMtNGQwNS04ODg5LTU4NjkwMjIyODY0ZiIsImF1ZCI6IkNvbUFyb3VuZCIsIm5iZiI6MTUwODIzODQwOCwic2NvcGUiOlsic3Z2cHJvZmlsZSIsIm9wZW5pZCJdLCJhdXRoX3RpbWUiOjE1MDgyMzg0MDgsInJlYWxtIjoiL0VtcGxveWVlcyIsImV4cCI6MTUwODI2NzIwOCwiaWF0IjoxNTA4MjM4NDA4LCJleHBpcmVzX2luIjoyODgwMDAwMCwianRpIjoiY2I0NzM4MGYtZTNhNC00NWQ3LThhZWQtZWQ4NmQ2MDQ4MmQ5In0.G4x-Rzj--9wonRKd5xKglxxw6WZcAFD-aHJL8YiAfqfYuZFjVsrxzXzM1LLb70slHPzGiW57roCFGuSANV2vSNfIA1G3yngEf77hbyGUwPxZ3H2fLfe4TEOG6KSTJ2aAR5y5sGxGJKPrhkPmZoXw2evUk1NAG0duISfQCKyTOBhcP5AeGSqH59CuZVxmUuxMY-UFH8JO6exImTSTPLF44u92NOT5-mlQyfGcEjby9Ns54Sjz0BD_Nh-6dUpb5owmPJQSM2eo1uJX6xoYWKaZoeL80IcuVD5tYEeBskj_1dK1UbDXoAFrLx2YykFnZV69NhpRgCS2M-ilEaWbF4DkVw";
 
 
             var parts = token.Split('.');
             var encodedBytes = Encoding.UTF8.GetBytes($"{parts[0]}.{parts[1]}");
-            var signatureBytes = Base64UrlEncoder.DecodeBytes(parts[2]);
-            var rsa = new RSACryptoServiceProvider();
-            rsa.ImportParameters(new RSAParameters
+            var signatureBytes = DecodeBytes(parts[2]);
+            var rsaCryptoServiceProvider = new RSACryptoServiceProvider();
+            rsaCryptoServiceProvider.ImportParameters(new RSAParameters
             {
                 Exponent = Base64UrlEncoder.DecodeBytes(e),
-                Modulus = Base64UrlEncoder.DecodeBytes(n),
+                Modulus = Base64UrlEncoder.DecodeBytes(n)
             });
-            var key = new RsaSecurityKey(rsa);
-            var valid = key.Rsa.VerifyData(encodedBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var rsaSecurityKey = new RsaSecurityKey(rsaCryptoServiceProvider);
 
-            // Code for v 1.0.4 of IdentityModel.Tokens
-            // var deformatter = key.GetSignatureDeformatter(SecurityAlgorithms.RsaSha256Signature);
-            // var hash = key.GetHashAlgorithmForSignature(SecurityAlgorithms.RsaSha256Signature);
-            // deformatter.SetHashAlgorithm(hash.GetType().ToString());
-            // var valid = deformatter.VerifySignature(hash.ComputeHash(encodedBytes), signatureBytes);
+
+            // Code for v 4.0.4 of IdentityModel.Tokens
+            var deformatter = rsaSecurityKey.GetSignatureDeformatter(SecurityAlgorithms.RsaSha256Signature);
+            var hash = rsaSecurityKey.GetHashAlgorithmForSignature(SecurityAlgorithms.RsaSha256Signature);
+            deformatter.SetHashAlgorithm(hash.GetType().ToString());
+            var valid = deformatter.VerifySignature(hash.ComputeHash(encodedBytes), signatureBytes);
+
+            // Code for v 5.14 of IdentityModel.Tokens
+            //var rsa = rsaSecurityKey.Rsa;
+            //var valid = rsa.VerifyData(encodedBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             Console.WriteLine(valid ? "Signature is valid" : "Signature is not valid");
 
+        }
+
+        public static byte[] DecodeBytes(string str)
+        {
+            const char base64PadCharacter = '=';
+            const string doubleBase64PadCharacter = "==";
+            const char base64Character62 = '+';
+            const char base64Character63 = '/';
+            const char base64UrlCharacter62 = '-';
+            const char base64UrlCharacter63 = '_';
+            if (null == str)
+            {
+                throw new ArgumentNullException(nameof(str));
+            }
+            // 62nd char of encoding
+            str = str.Replace(base64UrlCharacter62, base64Character62);
+
+            // 63rd char of encoding
+            str = str.Replace(base64UrlCharacter63, base64Character63);
+
+            // check for padding
+            switch (str.Length % 4)
+            {
+                case 0:
+                    // No pad chars in this case
+                    break;
+                case 2:
+                    // Two pad chars
+                    str += doubleBase64PadCharacter;
+                    break;
+                case 3:
+                    // One pad char
+                    str += base64PadCharacter;
+                    break;
+                default:
+                    break;
+            }
+            return Convert.FromBase64String(str);
         }
     }
 }
