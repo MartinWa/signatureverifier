@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -21,29 +20,32 @@ namespace signatureverifier
 
 
             var parts = token.Split('.');
-            var encodedBytes = Encoding.UTF8.GetBytes($"{parts[0]}.{parts[1]}");
-            var signatureBytes = DecodeBytes(parts[2]);
+            var encodedData = Encoding.UTF8.GetBytes($"{parts[0]}.{parts[1]}");
+            var encodedSignature = DecodeBytes(parts[2]);
             var rsaCryptoServiceProvider = new RSACryptoServiceProvider();
             rsaCryptoServiceProvider.ImportParameters(new RSAParameters
             {
-                Exponent = Base64UrlEncoder.DecodeBytes(e),
-                Modulus = Base64UrlEncoder.DecodeBytes(n)
+                Exponent = DecodeBytes(e),
+                Modulus = DecodeBytes(n)
             });
-            var rsaSecurityKey = new RsaSecurityKey(rsaCryptoServiceProvider);
 
+            // Code without IdentityModel.Tokens
+            var valid = rsaCryptoServiceProvider.VerifyData(encodedData, encodedSignature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             // Code for v 4.0.4 of IdentityModel.Tokens
-            var deformatter = rsaSecurityKey.GetSignatureDeformatter(SecurityAlgorithms.RsaSha256Signature);
-            var hash = rsaSecurityKey.GetHashAlgorithmForSignature(SecurityAlgorithms.RsaSha256Signature);
-            deformatter.SetHashAlgorithm(hash.GetType().ToString());
-            var valid = deformatter.VerifySignature(hash.ComputeHash(encodedBytes), signatureBytes);
+            //var rsaSecurityKey = new RsaSecurityKey(rsaCryptoServiceProvider);
+            //var deformatter = rsaSecurityKey.GetSignatureDeformatter(SecurityAlgorithms.RsaSha256Signature);
+            //var hasher = rsaSecurityKey.GetHashAlgorithmForSignature(SecurityAlgorithms.RsaSha256Signature);
+            //deformatter.SetHashAlgorithm(hasher.GetType().ToString());
+            //var hash = hasher.ComputeHash(encodedData);
+            //var valid = deformatter.VerifySignature(hash, encodedSignature);
 
             // Code for v 5.14 of IdentityModel.Tokens
             //var rsa = rsaSecurityKey.Rsa;
             //var valid = rsa.VerifyData(encodedBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            Console.WriteLine(valid ? "Signature is valid" : "Signature is not valid");
-
+            Console.WriteLine(valid ? "Signature is valid" : "Signature is not valid, press enter");
+            Console.ReadLine();
         }
 
         public static byte[] DecodeBytes(string str)
@@ -78,6 +80,7 @@ namespace signatureverifier
                     // One pad char
                     str += base64PadCharacter;
                     break;
+                // ReSharper disable once RedundantEmptySwitchSection
                 default:
                     break;
             }
